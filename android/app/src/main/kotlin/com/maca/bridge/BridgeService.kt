@@ -30,6 +30,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
 import android.content.ContentUris
+import android.graphics.Bitmap
 
 /**
  * Main background service that hosts the Ktor WebSocket server.
@@ -189,6 +190,34 @@ class BridgeService : Service() {
                                 } else { call.respond(io.ktor.http.HttpStatusCode.BadRequest) }
                             }
                         }
+
+                        get("/thumbnail/{id}") {
+                            val token = call.request.headers["X-Bridge-Token"] ?: call.request.queryParameters["token"]
+                            if (token.isNullOrEmpty() || token != SecurityManager.getSessionToken(applicationContext)) {
+                                call.respond(io.ktor.http.HttpStatusCode.Unauthorized)
+                            } else {
+                                val id = call.parameters["id"]?.toLongOrNull()
+                                if (id != null) {
+                                    try {
+                                        val uri = ContentUris.withAppendedId(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                                        val thumbnail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                            contentResolver.loadThumbnail(uri, android.util.Size(300, 300), null)
+                                        } else {
+                                            @Suppress("DEPRECATION")
+                                            android.provider.MediaStore.Images.Thumbnails.getThumbnail(contentResolver, id, android.provider.MediaStore.Images.Thumbnails.MINI_KIND, null)
+                                        }
+                                        
+                                        if (thumbnail != null) {
+                                            call.respondOutputStream(io.ktor.http.ContentType.Image.JPEG) {
+                                                thumbnail.compress(Bitmap.CompressFormat.JPEG, 75, this)
+                                            }
+                                        } else {
+                                            call.respond(io.ktor.http.HttpStatusCode.NotFound)
+                                        }
+                                    } catch (e: Exception) { call.respond(io.ktor.http.HttpStatusCode.NotFound) }
+                                } else { call.respond(io.ktor.http.HttpStatusCode.BadRequest) }
+                            }
+                        }
                         
                         post("/upload") {
                             val token = call.request.headers["X-Bridge-Token"]
@@ -272,6 +301,7 @@ class BridgeService : Service() {
     }
 
     private fun sendInitialSync() {
+        mediaManager.tryInitialize()
         sendCurrentBatteryStatus()
         contactManager.sendContactsToMac()
         smsManager.sendSmsHistoryToMac()

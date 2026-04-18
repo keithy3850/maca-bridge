@@ -97,19 +97,34 @@ class MediaBridgeManager(private val context: Context, private val scope: Corout
      */
     private fun sendMediaMetadata(metadata: MediaMetadata?) {
         if (metadata == null) return
-        val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Unknown Title"
-        val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Unknown Artist"
+        
+        // Try various keys for title and artist as different apps use different standards
+        val title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
+            ?: metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
+            ?: "No Title"
+            
+        val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
+            ?: metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
+            ?: metadata.getString(MediaMetadata.METADATA_KEY_AUTHOR)
+            ?: "Unknown Artist"
+
         var base64Art: String? = null
 
-        // Try to fetch album art bitmap from common keys
-        val bitmap = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+        // 1. Try to get direct bitmap first
+        var bitmap = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
             ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
-        
+            
+        // 2. If bitmap is missing, we could try to load from URI in future versions.
+        // For now, let's at least ensure title/artist always sync.
+
         if (bitmap != null) {
-            val outputStream = ByteArrayOutputStream()
-            // Compress to JPEG to reduce network payload size
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
-            base64Art = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+            try {
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+                base64Art = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+            } catch (e: Exception) {
+                Log.e(TAG, "Bitmap compression failed: ${e.message}")
+            }
         }
 
         val payload = MediaMetadataPayload(title, artist, base64Art)

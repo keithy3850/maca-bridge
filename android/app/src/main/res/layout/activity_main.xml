@@ -129,6 +129,16 @@
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSendClipboard"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="Send Clipboard to Mac"
+        android:layout_marginBottom="12dp"
+        app:cornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@id/btnTrackpad" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnTrackpad"
         android:layout_width="match_parent"
         android:layout_height="64dp"

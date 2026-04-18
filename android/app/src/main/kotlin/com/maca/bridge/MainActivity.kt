@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         val btnNotif = findViewById<Button>(R.id.btnNotificationSettings)
         val btnPhoto = findViewById<Button>(R.id.btnPhotoSettings)
         val btnTrack = findViewById<Button>(R.id.btnTrackpad)
+        val btnClip = findViewById<Button>(R.id.btnSendClipboard)
 
         btnNotif?.setOnClickListener {
             startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
@@ -73,6 +74,9 @@ class MainActivity : AppCompatActivity() {
         btnTrack?.setOnClickListener {
             startActivity(Intent(this, TrackpadActivity::class.java))
         }
+        btnClip?.setOnClickListener {
+            sendClipboardToMac()
+        }
         
         findViewById<TextView>(R.id.textView)?.setOnLongClickListener {
             updateManager.checkForUpdates(silent = false)
@@ -80,6 +84,17 @@ class MainActivity : AppCompatActivity() {
         }
         
         refreshPinDisplay()
+    }
+
+    private fun sendClipboardToMac() {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = clipboard.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val text = clip.getItemAt(0).text.toString()
+            val intent = Intent(Constants.ACTION_SEND_CLIPBOARD)
+            sendBroadcast(intent)
+            android.widget.Toast.makeText(this, "Clipboard synced to Mac", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun refreshPinDisplay() {
