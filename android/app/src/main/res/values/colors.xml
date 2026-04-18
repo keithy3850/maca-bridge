@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Material You / Android 14 inspired palette -->
+    <color name="primary">#0061A4</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#D1E4FF</color>
+    <color name="onPrimaryContainer">#001D36</color>
+    
+    <color name="background">#F8F9FF</color>
+    <color name="surface">#FAF9FD</color>
+    <color name="onSurface">#191C1E</color>
+    <color name="surfaceVariant">#E0E2EC</color>
+    
+    <color name="status_green">#4CAF50</color>
+    <color name="status_red">#F44336</color>
+</resources>

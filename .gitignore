@@ -1,0 +1,44 @@
+# macOS
+.DS_Store
+*.swp
+*.lock
+DerivedData/
+*.xcworkspace
+xcuserdata/
+*.xccheckout
+*.xcscheme
+*.xcuserstate
+*.moved-aside
+*.app
+*.dmg
+*.ipa
+*.zip
+
+# Android
+.gradle/
+build/
+local.properties
+*.apk
+*.bundle
+*.keystore
+*.jks
+*.hprof
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+javaRes/
+proguard-project.txt
+project.properties
+
+# Misc
+*.log
+.env
+node_modules/
+temp/

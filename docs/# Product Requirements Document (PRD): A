@@ -1,0 +1,68 @@
+# Product Requirements Document (PRD): Android-to-macOS Bridge
+
+## 1. Product Overview
+**Objective:** Build a local-network bridge application that synchronizes data and provides remote control capabilities between an Android smartphone and a macOS computer, heavily inspired by KDE Connect and Apple Continuity. 
+**Distribution Goal:** The Android client will be distributed via sideloading (GitHub Releases/Direct APK) to bypass Google Play Store restrictions on SMS and system-level permissions.
+
+## 2. System Architecture & Tech Stack
+The system operates on a Client-Server architecture over a Local Area Network (LAN). No cloud routing or USB tethering (ADB) is required.
+
+* **Communication Protocol:** WebSockets or raw TCP sockets.
+* **Discovery:** mDNS (Bonjour/ZeroConf) for automatic local network discovery and pairing without manual IP entry.
+* **Data Format:** Lightweight JSON payloads for all commands and sync events.
+* **Android App (The Server/Provider):** * **Language:** Kotlin (recommended).
+    * **Execution:** Runs a persistent **Foreground Service** to prevent Android from killing the WebSocket connection while the device is locked.
+* **macOS App (The Client/Receiver):**
+    * **Language:** Swift / SwiftUI.
+    * **Integration:** Relies heavily on native Apple APIs for notifications and clipboard management.
+
+## 3. Minimum Viable Product (MVP) Feature Scope
+
+### 3.1. SMS & Contact Syncing
+* **Android Implementation:** * Request `READ_SMS`, `RECEIVE_SMS`, `SEND_SMS`, and `READ_CONTACTS` permissions.
+    * Use a `BroadcastReceiver` for real-time incoming SMS (`android.provider.Telephony.SMS_RECEIVED`).
+    * Query `ContactsContract.CommonDataKinds.Phone.CONTENT_URI` on initial connection to build a JSON array of names and numbers (Skip high-res avatars for the MVP to save memory).
+    * Use `SmsManager.getDefault().sendTextMessage()` to execute outgoing replies.
+* **macOS Implementation:**
+    * Store the synced contacts locally in the app's memory to act as a directory for starting new conversations.
+    * Provide a UI to view SMS threads and type replies.
+
+### 3.2. Notification Mirroring
+* **Android Implementation:** * Implement a `NotificationListenerService` (requires explicit user permission in settings).
+    * Extract title, text, and app ID from incoming `StatusBarNotification` objects. 
+    * Package and send over WebSocket.
+* **macOS Implementation:**
+    * Use `UNUserNotificationCenter` to spawn native macOS notification banners mirroring the phone.
+
+### 3.3. Clipboard Synchronization
+* **macOS to Android (Seamless):** Mac monitors `NSPasteboard`. On change, sends payload to Android. Android uses `ClipboardManager.setPrimaryClip()` to update the phone's clipboard.
+* **Android to macOS (Manual Trigger):** Due to Android 10+ background clipboard restrictions, the Android app will include a "Send Clipboard" button inside its persistent Foreground Service notification. Tapping this fetches the clipboard and pushes it to the Mac (`NSPasteboard`). 
+
+### 3.4. Utility Sync (Battery & Ping)
+* **Battery Status:** Android sends periodic JSON payloads containing battery percentage and charging state. Mac UI displays this data.
+* **Ping My Phone:** Mac app sends a `{"command": "ping"}` payload. Android app bypasses Do Not Disturb and triggers `RingtoneManager` to play a sound.
+
+### 3.5. Universal Media Controls
+* **Mac to Phone:** Mac sends play/pause/skip JSON commands. Android uses `MediaSessionManager` to control active media playback.
+* **Phone to Mac:** Android acts as a remote. Mac uses `AppleScript` or `MPRemoteCommandCenter` to control desktop media playback.
+
+### 3.6. Handoff (Browser Syncing)
+* **Android Implementation:** App registers itself in the native Android Share Sheet for handling URLs. When a URL is shared to the app, it sends a payload to the Mac.
+* **macOS Implementation:** Mac receives the URL payload and opens it in the user's default browser.
+
+### 3.7. Local File Transfer ("AirDrop" Alternative)
+* **Android Implementation:** Runs a lightweight local HTTP server (e.g., Ktor or NanoHTTPD) independent of the WebSocket.
+* **macOS Implementation:** User drags and drops a file onto the Mac app UI. The Mac app initiates an HTTP POST request to the Android app's local IP to transfer the file rapidly over WiFi.
+
+## 4. Out of Scope for MVP
+The following features are explicitly excluded from this build phase to ensure a timely launch:
+* Real-time video screen mirroring (Scrcpy).
+* Unlocking macOS via Bluetooth Low Energy (BLE) or PAM modules.
+* Two-way Bluetooth audio call routing.
+* Remote keyboard injection into Android fields.
+* Accessibility UI scraping (e.g., controlling 3rd party apps headless).
+* Syncing high-resolution contact avatars.
+
+## 5. Security & Privacy
+* **Local Network Only:** All data transmission remains strictly on the local LAN. No external cloud servers are used.
+* **Direct Sideloading:** Bypassing Play Store ensures no reliance on third-party tracking or strict policy compromises for core functionalities.

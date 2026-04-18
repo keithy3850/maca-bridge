@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Maca Bridge</string>
+    
+    <!-- MainActivity -->
+    <string name="bridge_active_pin">Bridge Active • PIN: %1$s</string>
+    <string name="notification_listener_enabled">Notification Listener: Enabled</string>
+    <string name="notification_listener_disabled">Notification Listener: Disabled</string>
+    <string name="gallery_access_granted">Gallery Access: Granted</string>
+    <string name="gallery_access_denied">Gallery Access: Denied</string>
+    <string name="url_sent_to_mac">URL sent to Mac</string>
+    <string name="shared_text_sent_to_mac">Shared text sent to Mac clipboard</string>
+
+    <!-- BridgeService -->
+    <string name="notification_channel_name">Maca Bridge</string>
+    <string name="notification_title_active">Maca Bridge Active</string>
+    <string name="notification_text_listening">Listening for macOS connections...</string>
+    <string name="notification_action_send_clipboard">Send Clipboard</string>
+    
+    <string name="file_transfer_channel_name">File Transfers</string>
+    <string name="file_received_title">File Received</string>
+    <string name="file_received_text">Received: %1$s</string>
+    
+    <string name="maca_bridge_v1">Maca Bridge v1.0</string>
+</resources>
